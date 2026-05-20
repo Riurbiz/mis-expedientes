@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Expedientes Automático</title>
+    <title>Gestor Avanzado de Expedientes e Inversiones</title>
     <style>
         :root {
             --primary: #2e1a47;
@@ -15,6 +15,7 @@
             --border: #2d2442;
             --accent: #a855f7;
             --green: #10b981;
+            --danger: #ef4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
@@ -23,57 +24,85 @@
         header { margin-bottom: 30px; text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         h1 { color: #ffffff; margin-bottom: 10px; font-size: 1.8rem; }
         header p { color: var(--text-muted); }
+        
         .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; }
         @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
+        
         .card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3); }
         .card h2 { margin-bottom: 15px; font-size: 1.2rem; color: #ffffff; }
 
         /* Acordeón de Proyectos */
         .accordion-btn { background: #251b38; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; border: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; user-select: none; }
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
-        .project-card { background: #201833; border: 1px solid var(--border); border-radius: 8px; padding: 15px; }
-        .project-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; border-bottom: 1px solid #33264f; padding-bottom: 4px; }
+        
+        .project-card { background: #201833; border: 1px solid var(--border); border-radius: 8px; padding: 15px; cursor: pointer; transition: all 0.2s; }
+        .project-card:hover { border-color: var(--accent); background: #261c3d; }
+        .project-card.active { border-color: var(--green); background: #1e293b; box-shadow: 0 0 8px var(--green); }
+        .project-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; border-bottom: 1px solid #33264f; padding-bottom: 4px; display: flex; justify-content: space-between; }
         .project-stat { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
         .stat-val { color: var(--green); font-weight: 600; }
 
         /* Formularios y Buscador */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; color: var(--text-muted); }
-        input[type="text"], textarea, input[type="file"] { width: 100%; padding: 10px; background: #110b21; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; color: white; }
-        input:focus, textarea:focus { border-color: var(--accent); outline: none; }
+        input[type="text"], select, textarea, input[type="file"] { width: 100%; padding: 10px; background: #110b21; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; color: white; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; }
         textarea { resize: vertical; height: 80px; }
+        
         button { background-color: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; transition: all 0.2s; }
         button:hover { background-color: #9333ea; }
 
         /* Lista de Personas */
-        .user-list { list-style: none; max-height: 300px; overflow-y: auto; margin-top: 15px; }
-        .user-item { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #150f24; transition: all 0.2s; }
+        .user-list { list-style: none; max-height: 250px; overflow-y: auto; margin-top: 15px; }
+        .user-item { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #150f24; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
         .user-item:hover { background-color: #201836; border-color: var(--accent); }
         .user-item.active { background-color: #2d1a4a; border-color: var(--accent); box-shadow: 0 0 10px rgb(168 85 247 / 0.4); }
+        .badge { background: #3b235c; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; color: var(--accent); font-weight: bold; border: 1px solid var(--accent); }
+
         .profile-header { border-bottom: 2px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .gallery-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #120c21; padding: 10px; }
-        .gallery-item img { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; cursor: pointer; margin-bottom: 8px; }
+        
+        /* Galería Historial */
+        .gallery { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+        .gallery-item { border: 1px solid var(--border); border-radius: 8px; background: #120c21; padding: 15px; display: grid; grid-template-columns: 120px 1fr; gap: 15px; align-items: start; }
+        @media (max-width: 480px) { .gallery-item { grid-template-columns: 1fr; } }
+        .gallery-item img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); }
+        .payment-info { display: flex; flex-direction: column; gap: 5px; }
+        .payment-date { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+        .payment-comment { font-size: 0.95rem; color: var(--text); margin-top: 5px; background: #1a132e; padding: 8px; border-radius: 6px; border-left: 3px solid var(--green); }
+
         .no-data { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+        .filter-banner { background: #1e1b4b; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #312e81; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Gestor de Registros Automático</h1>
-        <p>Tus proyectos se actualizan en la nube sin tocar el código.</p>
+        <h1>Gestor de Registros de Inversión Pro</h1>
+        <p>Monitorea clientes por proyectos, filtra sus estados y revisa cobros con fecha exacta.</p>
     </header>
 
     <div class="grid-layout">
         <div style="display: flex; flex-direction: column; gap: 20px;">
+            
             <div class="card" style="padding: 15px;">
                 <div class="accordion-btn" onclick="toggleProyectos()">
-                    <span>📊 Ver Proyectos Activos</span>
+                    <span>📊 Proyectos (Haz clic para filtrar personas)</span>
                     <span id="arrow">▼</span>
                 </div>
-                <div class="accordion-content" id="proyectosMenu">
-                    <div id="loadingProjects" style="padding:10px; text-align:center; color:var(--text-muted);">Cargando proyectos...</div>
+                <div class="accordion-content" id="proyectosMenu" style="max-height: 1000px;">
+                    <div class="project-card" id="card-VIP1" onclick="filtrarPorProyecto('VIP1')">
+                        <div class="project-title"><span>VIP1</span> <span id="count-VIP1" style="font-size:0.8rem; color:white;">0 miembros</span></div>
+                        <div class="project-stat"><span>Costo:</span> <span style="color:white;">10.00 USDT</span></div>
+                        <div class="project-stat"><span>Ganancia Diaria:</span> <span class="stat-val">2.90 USDT</span></div>
+                        <div class="project-stat"><span>Ciclo:</span> <span style="color:white;">60 Días</span></div>
+                    </div>
+                    <div class="project-card" id="card-VIP2" onclick="filtrarPorProyecto('VIP2')">
+                        <div class="project-title"><span>VIP2</span> <span id="count-VIP2" style="font-size:0.8rem; color:white;">0 miembros</span></div>
+                        <div class="project-stat"><span>Costo:</span> <span style="color:white;">48.00 USDT</span></div>
+                        <div class="project-stat"><span>Ganancia Diaria:</span> <span class="stat-val">11.04 USDT</span></div>
+                        <div class="project-stat"><span>Ciclo:</span> <span style="color:white;">60 Días</span></div>
+                    </div>
                 </div>
             </div>
 
@@ -88,44 +117,56 @@
                         <label>Cédula / ID Único</label>
                         <input type="text" id="idInput" required placeholder="Ej. 12345678">
                     </div>
+                    <div class="form-group">
+                        <label>Asignar a Proyecto / VIP</label>
+                        <select id="projectSelect">
+                            <option value="Ninguno">Ninguno (Solo registro)</option>
+                            <option value="VIP1">VIP1 (10.00 USDT)</option>
+                            <option value="VIP2">VIP2 (48.00 USDT)</option>
+                        </select>
+                    </div>
                     <button type="submit">Agregar Persona</button>
                 </form>
             </div>
 
             <div class="card">
-                <h2>Buscar Registro</h2>
-                <input type="text" id="searchInput" placeholder="Escribe nombre o cédula...">
+                <h2>Buscador de Clientes</h2>
+                <div id="filterIndicator" class="filter-banner" style="display:none;">
+                    <span>Filtrado por: <strong id="filterName" style="color:var(--accent);">VIP1</strong></span>
+                    <button onclick="limpiarFiltro()" style="padding:3px 8px; font-size:0.8rem; width:auto; background:var(--danger)">Quitar Filtro</button>
+                </div>
+                <input type="text" id="searchInput" placeholder="Escribe nombre o cédula para buscar...">
                 <ul class="user-list" id="userList"></ul>
             </div>
         </div>
 
         <div class="card" style="min-height: 450px;">
             <div id="activeProfile" class="no-data">
-                Selecciona una persona de la lista para ver o agregar sus capturas.
+                Selecciona una persona de la lista de la izquierda para desplegar su ficha de cliente, ver sus capturas guardadas o registrar un nuevo pago.
             </div>
             
             <div id="profileContent" style="display: none;">
                 <div class="profile-header">
                     <h2 id="viewName">Nombre</h2>
-                    <p style="color: var(--text-muted);">Cédula/ID: <span id="viewId" style="color: white; font-weight: 600;">-</span></p>
+                    <p style="color: var(--text-muted); margin-top:4px;">Cédula/ID: <span id="viewId" style="color: white; font-weight: 600;">-</span> | Proyecto: <span id="viewProject" class="badge">-</span></p>
                 </div>
 
                 <div style="background: #120c21; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
-                    <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--accent);">Añadir Captura</h3>
+                    <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--accent);">Subir Comprobante / Captura</h3>
                     <form id="screenshotForm">
                         <div class="form-group">
-                            <label>Seleccionar Archivo</label>
+                            <label>Archivo de Imagen (Captura del Teléfono)</label>
                             <input type="file" id="fileInput" accept="image/*" required>
                         </div>
                         <div class="form-group">
-                            <label>Concepto del Comprobante</label>
-                            <textarea id="conceptInput" placeholder="Escribe las notas..." required></textarea>
+                            <label>Concepto o Detalles del Pago</label>
+                            <textarea id="conceptInput" placeholder="Escribe los detalles del monto, retiro o recarga aquí..." required></textarea>
                         </div>
-                        <button type="submit" style="background-color: var(--green);">Guardar Captura</button>
+                        <button type="submit" style="background-color: var(--green);">Guardar en Historial con Fecha</button>
                     </form>
                 </div>
 
-                <h3>Historial de Capturas</h3>
+                <h3>Historial de Fotos y Pagos Subidos</h3>
                 <div class="gallery" id="screenshotGallery"></div>
             </div>
         </div>
@@ -137,52 +178,30 @@
         const content = document.getElementById("proyectosMenu");
         const arrow = document.getElementById("arrow");
         if (content.style.maxHeight === "0px" || !content.style.maxHeight) {
-            content.style.maxHeight = "1000px";
-            arrow.textContent = "▲";
+            content.style.maxHeight = "1000px"; arrow.textContent = "▲";
         } else {
-            content.style.maxHeight = "0px";
-            arrow.textContent = "▼";
+            content.style.maxHeight = "0px"; arrow.textContent = "▼";
         }
     }
 
-    // ANTENA CONECTADA A LA BASE DE DATOS DE GEMINI
-    async function cargarProyectosRemotos() {
-        try {
-            // Conexión directa a mi almacén de datos remoto en la nube
-            const response = await fetch('https://api.jsonbin.io/v3/b/664baa2ae41b4d34e4f71a06/latest', {
-                headers: { 'X-Master-Key': '$2a$10$wN96wXwXw6Zf9WwXwXwXwOuWwWwWwXwXwXwXwXwXwXwXwXwXwXwXw' } // Simulación de llave segura de conexión remota
-            });
-            // Si por alguna razón de red falla, cargamos los datos por defecto para asegurar que funcione
-            const data = response.ok ? (await response.json()).record : {
-                proyectos: [
-                    { nombre: "VIP1", costo: "10.00 USDT", ganancia: "2.90 USDT", ciclo: "60 Días" },
-                    { nombre: "VIP2", costo: "48.00 USDT", ganancia: "11.04 USDT", ciclo: "60 Días" }
-                ]
-            };
-            
-            const menu = document.getElementById("proyectosMenu");
-            menu.innerHTML = "";
-            data.proyectos.forEach(p => {
-                menu.innerHTML += `
-                    <div class="project-card">
-                        <div class="project-title">${p.nombre}</div>
-                        <div class="project-stat"><span>Costo:</span> <span style="color:white;">${p.costo}</span></div>
-                        <div class="project-stat"><span>Ganancia Diaria:</span> <span class="stat-val">${p.ganancia}</span></div>
-                        <div class="project-stat"><span>Ciclo:</span> <span style="color:white;">${p.ciclo}</span></div>
-                    </div>`;
-            });
-        } catch (e) {
-            console.log("Carga local de respaldo activa");
-        }
-    }
-
-    // Código base local para manejo de clientes e imágenes internas
     let db;
-    const request = indexedDB.open("GestionExpedientesDB", 1);
-    request.onupgradeneeded = (e) => { db = e.target.result; if (!db.objectStoreNames.contains("people")) db.createObjectStore("people", { keyPath: "id" }); };
-    request.onsuccess = (e) => { db = e.target.result; renderUserList(); cargarProyectosRemotos(); };
-
+    let filtroProyectoActual = null;
     let selectedPersonId = null;
+
+    const request = indexedDB.open("GestionExpedientesVIPDB", 1);
+    request.onupgradeneeded = function(e) {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("people")) {
+            db.createObjectStore("people", { keyPath: "id" });
+        }
+    };
+
+    request.onsuccess = function(e) {
+        db = e.target.result;
+        renderUserList();
+        actualizarContadoresProyectos();
+    };
+
     const personForm = document.getElementById('personForm');
     const userList = document.getElementById('userList');
     const searchInput = document.getElementById('searchInput');
@@ -190,32 +209,61 @@
     const profileContent = document.getElementById('profileContent');
     const viewName = document.getElementById('viewName');
     const viewId = document.getElementById('viewId');
+    const viewProject = document.getElementById('viewProject');
     const screenshotForm = document.getElementById('screenshotForm');
     const screenshotGallery = document.getElementById('screenshotGallery');
+    const filterIndicator = document.getElementById('filterIndicator');
+    const filterName = document.getElementById('filterName');
 
+    // Registrar Persona
     personForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const name = document.getElementById('nameInput').value.trim();
         const id = document.getElementById('idInput').value.trim();
+        const project = document.getElementById('projectSelect').value;
+
         const transaction = db.transaction(["people"], "readwrite");
         const store = transaction.objectStore("people");
-        store.get(id).onsuccess = function(e) {
-            if (e.target.result) { alert("Esta cédula ya está registrada."); return; }
-            store.add({ id: id, name: name, screenshots: [] });
-            transaction.oncomplete = () => { personForm.reset(); renderUserList(); loadProfile(id); };
+
+        const checkRequest = store.get(id);
+        checkRequest.onsuccess = function() {
+            if (checkRequest.result) {
+                alert("Este número de ID/Cédula ya está registrado.");
+                return;
+            }
+            store.add({ id: id, name: name, project: project, screenshots: [] });
+            transaction.oncomplete = function() {
+                personForm.reset();
+                renderUserList();
+                actualizarContadoresProyectos();
+                loadProfile(id);
+            };
         };
     });
 
-    function renderUserList(filter = "") {
+    // Renderizar Lista con Filtros integrados
+    function renderUserList(searchQuery = "") {
         userList.innerHTML = "";
-        db.transaction(["people"], "readonly").objectStore("people").openCursor().onsuccess = function(e) {
+        const transaction = db.transaction(["people"], "readonly");
+        const store = transaction.objectStore("people");
+        
+        store.openCursor().onsuccess = function(e) {
             const cursor = e.target.result;
             if (cursor) {
                 const person = cursor.value;
-                if (person.name.toLowerCase().includes(filter.toLowerCase()) || person.id.includes(filter)) {
+                const matchesSearch = person.name.toLowerCase().includes(searchQuery.toLowerCase()) || person.id.includes(searchQuery);
+                const matchesFilter = !filtroProyectoActual || person.project === filtroProyectoActual;
+
+                if (matchesSearch && matchesFilter) {
                     const li = document.createElement('li');
                     li.className = `user-item ${selectedPersonId === person.id ? 'active' : ''}`;
-                    li.innerHTML = `<strong>${person.name}</strong> <span style="font-size:0.85rem; color:var(--text-muted);">(ID: ${person.id})</span>`;
+                    li.innerHTML = `
+                        <div>
+                            <strong>${person.name}</strong><br>
+                            <span style="font-size:0.85rem; color:var(--text-muted);">ID: ${person.id}</span>
+                        </div>
+                        <span class="badge" style="background:${person.project==='Ninguno'?'#334155':''}">${person.project}</span>
+                    `;
                     li.addEventListener('click', () => loadProfile(person.id));
                     userList.appendChild(li);
                 }
@@ -223,42 +271,113 @@
             }
         };
     }
+
     searchInput.addEventListener('input', (e) => renderUserList(e.target.value));
 
+    // Filtrar al tocar una tarjeta de proyecto
+    function filtrarPorProyecto(proyecto) {
+        filtroProyectoActual = proyecto;
+        filterIndicator.style.display = "flex";
+        filterName.textContent = proyecto;
+        
+        document.querySelectorAll('.project-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(`card-${proyecto}`).classList.add('active');
+        
+        renderUserList(searchInput.value);
+    }
+
+    function limpiarFiltro() {
+        filtroProyectoActual = null;
+        filterIndicator.style.display = "none";
+        document.querySelectorAll('.project-card').forEach(c => c.classList.remove('active'));
+        renderUserList(searchInput.value);
+    }
+
+    // Cargar Ficha del Cliente Seleccionado
     function loadProfile(id) {
         selectedPersonId = id;
-        db.transaction(["people"], "readonly").objectStore("people").get(id).onsuccess = function(e) {
+        // Refrescar clases active en la lista izquierda
+        renderUserList(searchInput.value);
+
+        const transaction = db.transaction(["people"], "readonly");
+        const store = transaction.objectStore("people");
+        
+        store.get(id).onsuccess = function(e) {
             const person = e.target.result;
-            if (person) { activeProfile.style.display = "none"; profileContent.style.display = "block"; viewName.textContent = person.name; viewId.textContent = person.id; renderGallery(person.screenshots); }
+            if (person) {
+                activeProfile.style.display = "none";
+                profileContent.style.display = "block";
+                viewName.textContent = person.name;
+                viewId.textContent = person.id;
+                viewProject.textContent = person.project;
+                renderGallery(person.screenshots);
+            }
         };
     }
 
+    // Renderizar las Fotos con FECHA, COMENTARIO y DATOS
     function renderGallery(screenshots) {
         screenshotGallery.innerHTML = "";
-        if (screenshots.length === 0) { screenshotGallery.innerHTML = '<p class="no-data" style="grid-column:1/-1;">No hay capturas.</p>'; return; }
-        screenshots.forEach(item => {
-            const div = document.createElement('div'); div.className = 'gallery-item';
-            div.innerHTML = `<img src="${item.image}" onclick="window.open('${item.image}', '_blank')"><p style="font-size:0.9rem;"><strong>Concepto:</strong> ${item.concept}</p>`;
+        if (screenshots.length === 0) {
+            screenshotGallery.innerHTML = '<p class="no-data">No hay capturas ni pagos registrados para este cliente.</p>';
+            return;
+        }
+        
+        // Mostrar los más recientes primero
+        const reversedScreenshots = [...screenshots].reverse();
+
+        reversedScreenshots.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.innerHTML = `
+                <img src="${item.image}" onclick="window.open('${item.image}', '_blank')" title="Clic para ampliar">
+                <div class="payment-info">
+                    <span class="payment-date">📅 Subido el: ${item.date}</span>
+                    <p class="payment-comment"><strong>Concepto / Notas:</strong><br>${item.concept}</p>
+                </div>
+            `;
             screenshotGallery.appendChild(div);
         });
     }
 
+    // Guardar captura con Fecha y Hora automática
     screenshotForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        const file = document.getElementById('fileInput').files[0]; if (!file || !selectedPersonId) return;
+        const file = document.getElementById('fileInput').files[0];
+        if (!file || !selectedPersonId) return;
+
         const reader = new FileReader();
         reader.onloadend = function() {
             const transaction = db.transaction(["people"], "readwrite");
             const store = transaction.objectStore("people");
+            
             store.get(selectedPersonId).onsuccess = function(e) {
                 const person = e.target.result;
-                person.screenshots.push({ image: reader.result, concept: document.getElementById('conceptInput').value.trim() });
+                
+                // Formatear la fecha y hora actual de forma limpia
+                const ahora = new Date();
+                const fechaFormateada = ahora.toLocaleDateString() + ' - ' + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                person.screenshots.push({
+                    image: reader.result,
+                    concept: document.getElementById('conceptInput').value.trim(),
+                    date: fechaFormateada
+                });
+
                 store.put(person);
-                transaction.oncomplete = () => { screenshotForm.reset(); loadProfile(selectedPersonId); };
+                transaction.oncomplete = function() {
+                    screenshotForm.reset();
+                    loadProfile(selectedPersonId);
+                };
             };
         };
         reader.readAsDataURL(file);
     });
-</script>
-</body>
-</html>
+
+    // Contadores Dinámicos para las tarjetas moradas de Proyectos
+    function actualizarContadoresProyectos() {
+        let v1 = 0; let v2 = 0;
+        const transaction = db.transaction(["people"], "readonly");
+        transaction.objectStore("people").openCursor().onsuccess = function(e) {
+            const cursor = e.target.result;
+            if (cursor) {
