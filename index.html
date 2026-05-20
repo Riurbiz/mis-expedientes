@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Expedientes y Capturas</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 { color: #0f172a; margin-bottom: 10px; }
+
+        /* Estructura Adaptable */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        }
+
+        .card h2 { margin-bottom: 15px; font-size: 1.2rem; color: #334155; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; }
+        input[type="text"], textarea, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        textarea { resize: vertical; height: 80px; }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: var(--primary-hover); }
+
+        /* Lista de Personas */
+        .user-list {
+            list-style: none;
+            max-height: 350px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .user-item {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-item:hover { background-color: #f1f5f9; }
+        .user-item.active { background-color: #e0f2fe; border-color: #7dd3fc; }
+
+        .profile-header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Galería */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .gallery-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8fafc;
+            padding: 10px;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Gestor de Registros Personales</h1>
+        <p>Administra personas, añade múltiples capturas y asigna conceptos desde tu PC o teléfono.</p>
+    </header>
+
+    <div class="grid-layout">
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card">
+                <h2>Registrar Nueva Persona</h2>
+                <form id="personForm">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="nameInput" required placeholder="Ej. Juan Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label>Cédula / ID Único</label>
+                        <input type="text" id="idInput" required placeholder="Ej. 12345678">
+                    </div>
+                    <button type="submit">Agregar Persona</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Buscar Persona</h2>
+                <input type="text" id="searchInput" placeholder="Escribe nombre o cédula...">
+                <ul class="user-list" id="userList"></ul>
+            </div>
+        </div>
+
+        <div class="card" style="min-height: 450px;">
+            <div id="activeProfile" class="no-data">
+                Selecciona una persona de la lista para gestionar sus comprobantes.
+            </div>
+            
+            <div id="profileContent" style="display: none;">
+                <div class="profile-header">
+                    <h2 id="viewName">Nombre</h2>
+                    <p style="color: #64748b;">Cédula/ID: <span id="viewId">-</span></p>
+                </div>
+
+                <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="font-size: 1rem; margin-bottom: 10px;">Añadir Captura</h3>
+                    <form id="screenshotForm">
+                        <div class="form-group">
+                            <label>Seleccionar Archivo (Captura o Foto)</label>
+                            <input type="file" id="fileInput" accept="image/*" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Concepto o Notas del Comprobante</label>
+                            <textarea id="conceptInput" placeholder="Escribe el motivo o concepto..." required></textarea>
+                        </div>
+                        <button type="submit" style="background-color: #10b981;">Guardar en el Historial</button>
+                    </form>
+                </div>
+
+                <h3>Historial de Capturas Guardadas</h3>
+                <div class="gallery" id="screenshotGallery"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let db;
+    // Base de datos local interna en el navegador
+    const request = indexedDB.open("GestionExpedientesDB", 1);
+
+    request.onupgradeneeded = function(e) {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("people")) {
+            db.createObjectStore("people", { keyPath: "id" });
+        }
+    };
+
+    request.onsuccess = function(e) {
+        db = e.target.result;
+        renderUserList();
+    };
+
+    let selectedPersonId = null;
+    const personForm = document.getElementById('personForm');
+    const userList = document.getElementById('userList');
+    const searchInput = document.getElementById('searchInput');
+    const activeProfile = document.getElementById('activeProfile');
+    const profileContent = document.getElementById('profileContent');
+    const viewName = document.getElementById('viewName');
+    const viewId = document.getElementById('viewId');
+    const screenshotForm = document.getElementById('screenshotForm');
+    const screenshotGallery = document.getElementById('screenshotGallery');
+
+    personForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('nameInput').value.trim();
+        const id = document.getElementById('idInput').value.trim();
+
+        const transaction = db.transaction(["people"], "readwrite");
+        const store = transaction.objectStore("people");
+
+        const checkRequest = store.get(id);
+        checkRequest.onsuccess = function() {
+            if (checkRequest.result) {
+                alert("Este número de ID/Cédula ya está registrado.");
+                return;
+            }
+            store.add({ id: id, name: name, screenshots: [] });
+            transaction.oncomplete = function() {
+                personForm.reset();
+                renderUserList();
+                loadProfile(id);
+            };
+        };
+    });
+
+    function renderUserList(filter = "") {
+        userList.innerHTML = "";
+        const transaction = db.transaction(["people"], "readonly");
+        const store = transaction.objectStore("people");
+        
+        store.openCursor().onsuccess = function(e) {
+            const cursor = e.target.result;
+            if (cursor) {
+                const person = cursor.value;
+                if (person.name.toLowerCase().includes(filter.toLowerCase()) || person.id.includes(filter)) {
+                    const li = document.createElement('li');
+                    li.className = `user-item ${selectedPersonId === person.id ? 'active' : ''}`;
+                    li.innerHTML = `<strong>${person.name}</strong> <span style="font-size:0.85rem; color:#64748b;">(ID: ${person.id})</span>`;
+                    li.addEventListener('click', () => loadProfile(person.id));
+                    userList.appendChild(li);
+                }
+                cursor.continue();
+            }
+        };
+    }
+
+    searchInput.addEventListener('input', (e) => renderUserList(e.target.value));
+
+    function loadProfile(id) {
+        selectedPersonId = id;
+        const transaction = db.transaction(["people"], "readonly");
+        const store = transaction.objectStore("people");
+        
+        store.get(id).onsuccess = function(e) {
+            const person = e.target.result;
+            if (person) {
+                activeProfile.style.display = "none";
+                profileContent.style.display = "block";
+                viewName.textContent = person.name;
+                viewId.textContent = person.id;
+                renderGallery(person.screenshots);
+            }
+        };
+    }
+
+    function renderGallery(screenshots) {
+        screenshotGallery.innerHTML = "";
+        if (screenshots.length === 0) {
+            screenshotGallery.innerHTML = '<p class="no-data" style="grid-column: 1/-1;">No hay capturas registradas.</p>';
+            return;
+        }
+        screenshots.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.innerHTML = `
+                <img src="${item.image}" onclick="window.open('${item.image}', '_blank')">
+                <p style="font-size:0.85rem; color:#334155;"><strong>Concepto:</strong> ${item.concept}</p>
+            `;
+            screenshotGallery.appendChild(div);
+        });
+    }
+
+    screenshotForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const file = document.getElementById('fileInput').files[0];
+        if (!file || !selectedPersonId) return;
+
+        const reader = new FileReader();
+        reader.onloadend = function() {
+            const transaction = db.transaction(["people"], "readwrite");
+            const store = transaction.objectStore("people");
+            
+            store.get(selectedPersonId).onsuccess = function(e) {
+                const person = e.target.result;
+                person.screenshots.push({
+                    image: reader.result,
+                    concept: document.getElementById('conceptInput').value.trim()
+                });
+                store.put(person);
+                transaction.oncomplete = function() {
+                    screenshotForm.reset();
+                    loadProfile(selectedPersonId);
+                };
+            };
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
+</body>
+</html>
