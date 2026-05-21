@@ -3,395 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Avanzado de Expedientes e Inversiones</title>
-    <style>
-        :root {
-            --primary: #2e1a47;
-            --primary-hover: #402463;
-            --bg: #0f0a1c;
-            --card-bg: #1a1429;
-            --text: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: #2d2442;
-            --accent: #a855f7;
-            --green: #10b981;
-            --danger: #ef4444;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { margin-bottom: 30px; text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        h1 { color: #ffffff; margin-bottom: 10px; font-size: 1.8rem; }
-        header p { color: var(--text-muted); }
-        
-        .grid-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; }
-        @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
-        
-        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3); }
-        .card h2 { margin-bottom: 15px; font-size: 1.2rem; color: #ffffff; }
-
-        /* Acordeón de Proyectos */
-        .accordion-btn { background: #251b38; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; border: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; user-select: none; }
-        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
-        
-        .project-card { background: #201833; border: 1px solid var(--border); border-radius: 8px; padding: 15px; cursor: pointer; transition: all 0.2s; }
-        .project-card:hover { border-color: var(--accent); background: #261c3d; }
-        .project-card.active { border-color: var(--green); background: #1e293b; box-shadow: 0 0 8px var(--green); }
-        .project-title { font-weight: bold; font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; border-bottom: 1px solid #33264f; padding-bottom: 4px; display: flex; justify-content: space-between; }
-        .project-stat { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
-        .stat-val { color: var(--green); font-weight: 600; }
-
-        /* Formularios y Buscador */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; color: var(--text-muted); }
-        input[type="text"], select, textarea, input[type="file"] { width: 100%; padding: 10px; background: #110b21; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; color: white; }
-        input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; }
-        textarea { resize: vertical; height: 80px; }
-        
-        button { background-color: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; transition: all 0.2s; }
-        button:hover { background-color: #9333ea; }
-
-        /* Lista de Personas */
-        .user-list { list-style: none; max-height: 250px; overflow-y: auto; margin-top: 15px; }
-        .user-item { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #150f24; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .user-item:hover { background-color: #201836; border-color: var(--accent); }
-        .user-item.active { background-color: #2d1a4a; border-color: var(--accent); box-shadow: 0 0 10px rgb(168 85 247 / 0.4); }
-        .badge { background: #3b235c; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; color: var(--accent); font-weight: bold; border: 1px solid var(--accent); }
-
-        .profile-header { border-bottom: 2px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
-        
-        /* Galería Historial */
-        .gallery { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-        .gallery-item { border: 1px solid var(--border); border-radius: 8px; background: #120c21; padding: 15px; display: grid; grid-template-columns: 120px 1fr; gap: 15px; align-items: start; }
-        @media (max-width: 480px) { .gallery-item { grid-template-columns: 1fr; } }
-        .gallery-item img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); }
-        .payment-info { display: flex; flex-direction: column; gap: 5px; }
-        .payment-date { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
-        .payment-comment { font-size: 0.95rem; color: var(--text); margin-top: 5px; background: #1a132e; padding: 8px; border-radius: 6px; border-left: 3px solid var(--green); }
-
-        .no-data { text-align: center; color: var(--text-muted); padding: 40px 20px; }
-        .filter-banner { background: #1e1b4b; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #312e81; }
-    </style>
+    <title>Registro de Personas y Fotos</title>
+    <!-- Tailwind CSS para un diseño limpio y adaptado a móviles -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Dexie.js para manejar la base de datos local del teléfono -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 </head>
-<body>
+<body class="bg-gray-100 font-sans min-h-screen pb-10">
 
-<div class="container">
-    <header>
-        <h1>Gestor de Registros de Inversión Pro</h1>
-        <p>Monitorea clientes por proyectos, filtra sus estados y revisa cobros con fecha exacta.</p>
-    </header>
+    <div class="max-w-md mx-auto p-4">
+        <header class="text-center my-6">
+            <h1 class="text-2xl font-bold text-gray-800">Registro de Personas</h1>
+            <p class="text-sm text-gray-500">Guarda datos y fotos localmente</p>
+        </header>
 
-    <div class="grid-layout">
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            
-            <div class="card" style="padding: 15px;">
-                <div class="accordion-btn" onclick="toggleProyectos()">
-                    <span>📊 Proyectos (Haz clic para filtrar personas)</span>
-                    <span id="arrow">▼</span>
+        <!-- Formulario de Registro -->
+        <div class="bg-white p-5 rounded-xl shadow-md mb-6">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Nueva Entrada</h2>
+            <form id="registroForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase">Nombres y Apellidos</label>
+                    <input type="text" id="nombre" required class="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="accordion-content" id="proyectosMenu" style="max-height: 1000px;">
-                    <div class="project-card" id="card-VIP1" onclick="filtrarPorProyecto('VIP1')">
-                        <div class="project-title"><span>VIP1</span> <span id="count-VIP1" style="font-size:0.8rem; color:white;">0 miembros</span></div>
-                        <div class="project-stat"><span>Costo:</span> <span style="color:white;">10.00 USDT</span></div>
-                        <div class="project-stat"><span>Ganancia Diaria:</span> <span class="stat-val">2.90 USDT</span></div>
-                        <div class="project-stat"><span>Ciclo:</span> <span style="color:white;">60 Días</span></div>
-                    </div>
-                    <div class="project-card" id="card-VIP2" onclick="filtrarPorProyecto('VIP2')">
-                        <div class="project-title"><span>VIP2</span> <span id="count-VIP2" style="font-size:0.8rem; color:white;">0 miembros</span></div>
-                        <div class="project-stat"><span>Costo:</span> <span style="color:white;">48.00 USDT</span></div>
-                        <div class="project-stat"><span>Ganancia Diaria:</span> <span class="stat-val">11.04 USDT</span></div>
-                        <div class="project-stat"><span>Ciclo:</span> <span style="color:white;">60 Días</span></div>
-                    </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase">Cédula de Identidad (CI)</label>
+                    <input type="text" id="ci" required class="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-            </div>
-
-            <div class="card">
-                <h2>Registrar Nueva Persona</h2>
-                <form id="personForm">
-                    <div class="form-group">
-                        <label>Nombre Completo</label>
-                        <input type="text" id="nameInput" required placeholder="Ej. Juan Pérez">
-                    </div>
-                    <div class="form-group">
-                        <label>Cédula / ID Único</label>
-                        <input type="text" id="idInput" required placeholder="Ej. 12345678">
-                    </div>
-                    <div class="form-group">
-                        <label>Asignar a Proyecto / VIP</label>
-                        <select id="projectSelect">
-                            <option value="Ninguno">Ninguno (Solo registro)</option>
-                            <option value="VIP1">VIP1 (10.00 USDT)</option>
-                            <option value="VIP2">VIP2 (48.00 USDT)</option>
-                        </select>
-                    </div>
-                    <button type="submit">Agregar Persona</button>
-                </form>
-            </div>
-
-            <div class="card">
-                <h2>Buscador de Clientes</h2>
-                <div id="filterIndicator" class="filter-banner" style="display:none;">
-                    <span>Filtrado por: <strong id="filterName" style="color:var(--accent);">VIP1</strong></span>
-                    <button onclick="limpiarFiltro()" style="padding:3px 8px; font-size:0.8rem; width:auto; background:var(--danger)">Quitar Filtro</button>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase">Foto</label>
+                    <input type="file" id="foto" accept="image/*" required class="w-full mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
-                <input type="text" id="searchInput" placeholder="Escribe nombre o cédula para buscar...">
-                <ul class="user-list" id="userList"></ul>
-            </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase">Comentario de la Foto</label>
+                    <textarea id="comentario" rows="2" class="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribe algo sobre la foto..."></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
+                    Guardar Registro
+                </button>
+            </form>
         </div>
 
-        <div class="card" style="min-height: 450px;">
-            <div id="activeProfile" class="no-data">
-                Selecciona una persona de la lista de la izquierda para desplegar su ficha de cliente, ver sus capturas guardadas o registrar un nuevo pago.
-            </div>
-            
-            <div id="profileContent" style="display: none;">
-                <div class="profile-header">
-                    <h2 id="viewName">Nombre</h2>
-                    <p style="color: var(--text-muted); margin-top:4px;">Cédula/ID: <span id="viewId" style="color: white; font-weight: 600;">-</span> | Proyecto: <span id="viewProject" class="badge">-</span></p>
-                </div>
-
-                <div style="background: #120c21; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
-                    <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--accent);">Subir Comprobante / Captura</h3>
-                    <form id="screenshotForm">
-                        <div class="form-group">
-                            <label>Archivo de Imagen (Captura del Teléfono)</label>
-                            <input type="file" id="fileInput" accept="image/*" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Concepto o Detalles del Pago</label>
-                            <textarea id="conceptInput" placeholder="Escribe los detalles del monto, retiro o recarga aquí..." required></textarea>
-                        </div>
-                        <button type="submit" style="background-color: var(--green);">Guardar en Historial con Fecha</button>
-                    </form>
-                </div>
-
-                <h3>Historial de Fotos y Pagos Subidos</h3>
-                <div class="gallery" id="screenshotGallery"></div>
-            </div>
+        <!-- Lista de Registros -->
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Registros Guardados</h2>
+        <div id="listaPersonas" class="space-y-4">
+            <!-- Aquí se cargarán las tarjetas dinámicamente -->
         </div>
     </div>
-</div>
 
-<script>
-    function toggleProyectos() {
-        const content = document.getElementById("proyectosMenu");
-        const arrow = document.getElementById("arrow");
-        if (content.style.maxHeight === "0px" || !content.style.maxHeight) {
-            content.style.maxHeight = "1000px"; arrow.textContent = "▲";
-        } else {
-            content.style.maxHeight = "0px"; arrow.textContent = "▼";
-        }
-    }
+    <script>
+        // 1. Configurar la Base de Datos Local (IndexedDB)
+        const db = new Dexie("RegistroPersonasDB");
+        db.version(1).stores({
+            personas: '++id, nombre, ci, foto, comentario, fecha'
+        });
 
-    let db;
-    let filtroProyectoActual = null;
-    let selectedPersonId = null;
+        const form = document.getElementById('registroForm');
+        const lista = document.getElementById('listaPersonas');
 
-    const request = indexedDB.open("GestionExpedientesVIPDB", 1);
-    request.onupgradeneeded = function(e) {
-        db = e.target.result;
-        if (!db.objectStoreNames.contains("people")) {
-            db.createObjectStore("people", { keyPath: "id" });
-        }
-    };
+        // 2. Función para renderizar los registros en la pantalla
+        async function mostrarRegistros() {
+            lista.innerHTML = '';
+            const personas = await db.personas.reverse().toArray(); // Mostrar los más recientes primero
 
-    request.onsuccess = function(e) {
-        db = e.target.result;
-        renderUserList();
-        actualizarContadoresProyectos();
-    };
-
-    const personForm = document.getElementById('personForm');
-    const userList = document.getElementById('userList');
-    const searchInput = document.getElementById('searchInput');
-    const activeProfile = document.getElementById('activeProfile');
-    const profileContent = document.getElementById('profileContent');
-    const viewName = document.getElementById('viewName');
-    const viewId = document.getElementById('viewId');
-    const viewProject = document.getElementById('viewProject');
-    const screenshotForm = document.getElementById('screenshotForm');
-    const screenshotGallery = document.getElementById('screenshotGallery');
-    const filterIndicator = document.getElementById('filterIndicator');
-    const filterName = document.getElementById('filterName');
-
-    // Registrar Persona
-    personForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const name = document.getElementById('nameInput').value.trim();
-        const id = document.getElementById('idInput').value.trim();
-        const project = document.getElementById('projectSelect').value;
-
-        const transaction = db.transaction(["people"], "readwrite");
-        const store = transaction.objectStore("people");
-
-        const checkRequest = store.get(id);
-        checkRequest.onsuccess = function() {
-            if (checkRequest.result) {
-                alert("Este número de ID/Cédula ya está registrado.");
+            if (personas.length === 0) {
+                lista.innerHTML = `<p class="text-center text-gray-500 py-4">No hay registros guardados aún.</p>`;
                 return;
             }
-            store.add({ id: id, name: name, project: project, screenshots: [] });
-            transaction.oncomplete = function() {
-                personForm.reset();
-                renderUserList();
-                actualizarContadoresProyectos();
-                loadProfile(id);
-            };
-        };
-    });
 
-    // Renderizar Lista con Filtros integrados
-    function renderUserList(searchQuery = "") {
-        userList.innerHTML = "";
-        const transaction = db.transaction(["people"], "readonly");
-        const store = transaction.objectStore("people");
-        
-        store.openCursor().onsuccess = function(e) {
-            const cursor = e.target.result;
-            if (cursor) {
-                const person = cursor.value;
-                const matchesSearch = person.name.toLowerCase().includes(searchQuery.toLowerCase()) || person.id.includes(searchQuery);
-                const matchesFilter = !filtroProyectoActual || person.project === filtroProyectoActual;
-
-                if (matchesSearch && matchesFilter) {
-                    const li = document.createElement('li');
-                    li.className = `user-item ${selectedPersonId === person.id ? 'active' : ''}`;
-                    li.innerHTML = `
-                        <div>
-                            <strong>${person.name}</strong><br>
-                            <span style="font-size:0.85rem; color:var(--text-muted);">ID: ${person.id}</span>
-                        </div>
-                        <span class="badge" style="background:${person.project==='Ninguno'?'#334155':''}">${person.project}</span>
-                    `;
-                    li.addEventListener('click', () => loadProfile(person.id));
-                    userList.appendChild(li);
-                }
-                cursor.continue();
-            }
-        };
-    }
-
-    searchInput.addEventListener('input', (e) => renderUserList(e.target.value));
-
-    // Filtrar al tocar una tarjeta de proyecto
-    function filtrarPorProyecto(proyecto) {
-        filtroProyectoActual = proyecto;
-        filterIndicator.style.display = "flex";
-        filterName.textContent = proyecto;
-        
-        document.querySelectorAll('.project-card').forEach(c => c.classList.remove('active'));
-        document.getElementById(`card-${proyecto}`).classList.add('active');
-        
-        renderUserList(searchInput.value);
-    }
-
-    function limpiarFiltro() {
-        filtroProyectoActual = null;
-        filterIndicator.style.display = "none";
-        document.querySelectorAll('.project-card').forEach(c => c.classList.remove('active'));
-        renderUserList(searchInput.value);
-    }
-
-    // Cargar Ficha del Cliente Seleccionado
-    function loadProfile(id) {
-        selectedPersonId = id;
-        renderUserList(searchInput.value);
-
-        const transaction = db.transaction(["people"], "readonly");
-        const store = transaction.objectStore("people");
-        
-        store.get(id).onsuccess = function(e) {
-            const person = e.target.result;
-            if (person) {
-                activeProfile.style.display = "none";
-                profileContent.style.display = "block";
-                viewName.textContent = person.name;
-                viewId.textContent = person.id;
-                viewProject.textContent = person.project;
-                renderGallery(person.screenshots);
-            }
-        };
-    }
-
-    // Renderizar las Fotos con FECHA, COMENTARIO y DATOS
-    function renderGallery(screenshots) {
-        screenshotGallery.innerHTML = "";
-        if (screenshots.length === 0) {
-            screenshotGallery.innerHTML = '<p class="no-data">No hay capturas ni pagos registrados para este cliente.</p>';
-            return;
-        }
-        
-        const reversedScreenshots = [...screenshots].reverse();
-
-        reversedScreenshots.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'gallery-item';
-            div.innerHTML = `
-                <img src="${item.image}" onclick="window.open('${item.image}', '_blank')" title="Clic para ampliar">
-                <div class="payment-info">
-                    <span class="payment-date">📅 Subido el: ${item.date}</span>
-                    <p class="payment-comment"><strong>Concepto / Notas:</strong><br>${item.concept}</p>
-                </div>
-            `;
-            screenshotGallery.appendChild(div);
-        });
-    }
-
-    // Guardar captura con Fecha y Hora automática
-    screenshotForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const file = document.getElementById('fileInput').files[0];
-        if (!file || !selectedPersonId) return;
-
-        const reader = new FileReader();
-        reader.onloadend = function() {
-            const transaction = db.transaction(["people"], "readwrite");
-            const store = transaction.objectStore("people");
-            
-            store.get(selectedPersonId).onsuccess = function(e) {
-                const person = e.target.result;
+            personas.forEach(persona => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl shadow-md overflow-hidden border border-gray-200";
                 
-                const ahora = new Date();
-                const fechaFormateada = ahora.toLocaleDateString() + ' - ' + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-                person.screenshots.push({
-                    image: reader.result,
-                    concept: document.getElementById('conceptInput').value.trim(),
-                    date: fechaFormateada
+                // Formatear la fecha de subida
+                const fechaFormateada = new Date(persona.fecha).toLocaleString('es-ES', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
                 });
 
-                store.put(person);
-                transaction.oncomplete = function() {
-                    screenshotForm.reset();
-                    loadProfile(selectedPersonId);
-                };
+                card.innerHTML = `
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-bold text-lg text-gray-800">${persona.nombre}</h3>
+                        <p class="text-sm text-gray-600"><strong>CI:</strong> ${persona.ci}</p>
+                    </div>
+                    <div class="relative bg-black flex justify-center items-center max-h-64 overflow-hidden">
+                        <img src="${persona.foto}" alt="Foto de ${persona.nombre}" class="w-full object-cover">
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
+                            <p class="text-xs font-semibold text-blue-800 uppercase tracking-wider mb-1">Comentario</p>
+                            <p class="text-sm text-gray-700 italic">"${persona.comentario || 'Sin comentario.'}"</p>
+                        </div>
+                        <div class="pt-2 text-right">
+                            <span class="text-xs text-gray-400 font-medium block">Subido el: ${fechaFormateada}</span>
+                        </div>
+                        <button onclick="eliminarRegistro(${persona.id})" class="mt-2 text-xs w-full bg-red-50 text-red-600 py-1.5 rounded-md hover:bg-red-100 transition font-medium">
+                            Eliminar Registro
+                        </button>
+                    </div>
+                `;
+                lista.appendChild(card);
+            });
+        }
+
+        // 3. Escuchar el envío del formulario
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const ci = document.getElementById('ci').value;
+            const comentario = document.getElementById('comentario').value;
+            const fotoFile = document.getElementById('foto').files[0];
+
+            if (!fotoFile) return;
+
+            // Convertir la imagen a Base64 para guardarla en la BD
+            const reader = new FileReader();
+            reader.readAsDataURL(fotoFile);
+            reader.onloadend = async () => {
+                const fotoBase64 = reader.result;
+
+                // Insertar en la base de datos
+                await db.personas.add({
+                    nombre,
+                    ci,
+                    foto: fotoBase64,
+                    comentario,
+                    fecha: Date.now() // Guarda la fecha y hora exacta actual
+                });
+
+                // Resetear formulario y actualizar vista
+                form.reset();
+                mostrarRegistros();
             };
-        };
-        reader.readAsDataURL(file);
-    });
+        });
 
-    // Contadores Dinámicos para las tarjetas moradas de Proyectos
-    function actualizarContadoresProyectos() {
-        let v1 = 0; 
-        let v2 = 0;
-        const transaction = db.transaction(["people"], "readonly");
-        const store = transaction.objectStore("people");
-        
-        store.openCursor().onsuccess = function(e) {
-            const cursor = e.target.result;
-            if (cursor) {
-                if (cursor.value.project === "VIP1") v1++;
-                if (cursor.value.project === "VIP2") v2++;
-                cursor.continue();
-            } else {
-                // Al terminar de recorrer la base de datos, actualizamos el texto del HTML
-                document.getElementById('count-VIP1').textContent = `${v1} ${v1 === 1 ? 'miembro' : 'miembros'}`;
-                document.getElementById('count-VIP2').textContent = `${v2} ${v2 === 1 ? 'miembro' : 'miembros'}`;
+        // 4. Función para eliminar un registro
+        async function eliminarRegistro(id) {
+            if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
+                await db.personas.delete(id);
+                mostrarRegistros();
             }
-        };
-    }
-</script>
+        }
 
+        // Cargar datos al iniciar la página
+        mostrarRegistros();
+    </script>
 </body>
 </html>
